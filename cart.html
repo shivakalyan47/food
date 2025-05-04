@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Your Cart</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+  <div class="max-w-2xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold text-center text-green-700 mb-6">Your Cart</h1>
+    
+    <div id="cart-items" class="space-y-4 mb-6"></div>
+    <p id="total" class="text-xl font-bold mb-6 text-center"></p>
+
+    <div class="border-t pt-4">
+      <h2 class="text-xl font-semibold mb-4">Delivery Details</h2>
+      <input type="text" id="name" placeholder="Full Name" class="w-full border p-2 mb-2 rounded">
+      <input type="text" id="address" placeholder="Address" class="w-full border p-2 mb-2 rounded">
+      <input type="text" id="landmark" placeholder="Landmark" class="w-full border p-2 mb-2 rounded">
+      <input type="text" id="pincode" placeholder="Pin Code" class="w-full border p-2 mb-4 rounded">
+
+      <div class="text-center">
+        <button onclick="showQR()" class="bg-red-600 text-white px-6 py-2 rounded-xl hover:bg-red-700">Pay Now</button>
+      </div>
+    </div>
+
+    <div id="qr-section" class="mt-6 text-center hidden">
+      <h2 class="text-xl font-bold text-green-700 mb-4">Scan to Pay</h2>
+      <img id="qr-code" src="" class="mx-auto" alt="QR Code">
+      <p class="text-gray-500 mt-2">Use any UPI app to scan and complete the payment.</p>
+      <button onclick="confirmOrder()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700">I've Paid</button>
+    </div>
+
+    <div id="confirmation" class="mt-6 text-center hidden">
+      <h2 class="text-2xl font-bold text-green-700 mb-2">Order Placed Successfully!</h2>
+      <p class="text-lg text-gray-700">Your food will be delivered in 20 minutes.</p>
+    </div>
+  </div>
+
+  <script>
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartDiv = document.getElementById("cart-items");
+    const totalEl = document.getElementById("total");
+    let total = 0;
+
+    if (cart.length === 0) {
+      cartDiv.innerHTML = "<p class='text-center text-gray-500'>Your cart is empty.</p>";
+    } else {
+      cart.forEach((item, index) => {
+        cartDiv.innerHTML += `
+          <div class="flex justify-between items-center border-b pb-2">
+            <div>
+              <span class="font-medium">${item.name}</span>
+              <span class="block text-sm text-green-600 font-bold">₹${item.price}</span>
+            </div>
+            <button onclick="removeFromCart(${index})" class="text-red-500 hover:underline text-sm">Remove</button>
+          </div>
+        `;
+        total += item.price;
+      });
+    }
+
+    totalEl.innerText = "Total: ₹" + total;
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      location.reload();
+    }
+
+    function showQR() {
+      const name = document.getElementById("name").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const landmark = document.getElementById("landmark").value.trim();
+      const pincode = document.getElementById("pincode").value.trim();
+
+      if (!name || !address || !landmark || !pincode) {
+        alert("Please fill in all delivery details.");
+        return;
+      }
+
+      document.getElementById("qr-section").classList.remove("hidden");
+
+      const upiUrl = `upi://pay?pa=7676844820-1@superyes&pn=BudgetBites&am=${total}&cu=INR&tn=Food+order`;
+      document.getElementById("qr-code").src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiUrl)}&size=200x200`;
+    }
+
+    function confirmOrder() {
+      document.getElementById("qr-section").classList.add("hidden");
+      document.getElementById("confirmation").classList.remove("hidden");
+      localStorage.removeItem("cart"); // clear cart after payment
+    }
+  </script>
+</body>
+</html>
